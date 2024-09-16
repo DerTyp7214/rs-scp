@@ -1,0 +1,10 @@
+[package]
+name = "rs-scp"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ssh = "0.1.4"
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.9.34+deprecated"
+indicatif = "0.17.8"
