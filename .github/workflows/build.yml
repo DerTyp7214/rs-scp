@@ -26,11 +26,11 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Cache vcpkg on Windows
         if: matrix.os == 'windows-latest'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: C:\vcpkg
           key: ${{ runner.os }}-vcpkg-${{ hashFiles('**/Cargo.lock') }}
@@ -38,7 +38,7 @@ jobs:
             ${{ runner.os }}-vcpkg-
 
       - name: Cache cargo registry
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cargo/registry
           key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
@@ -46,7 +46,7 @@ jobs:
             ${{ runner.os }}-cargo-registry-
 
       - name: Cache build
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: target
           key: ${{ runner.os }}-build-${{ hashFiles('**/Cargo.lock') }}
@@ -87,17 +87,15 @@ jobs:
           echo "RUSTFLAGS=-L libs/windows/x86_64" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: Set up Rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: nightly
-          profile: minimal
-          override: true
 
       - name: Build
         run: cargo build --release
 
       - name: Upload binary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.os }}-binary
           path: target/release/rs-scp[.exe]?
@@ -107,7 +105,7 @@ jobs:
     needs: build
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Extract version
         id: cargo_version
@@ -126,39 +124,38 @@ jobs:
     needs: [ build, create_tag ]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Extract version
         id: cargo_version
         run: echo "::set-output name=version::$(grep '^version =' Cargo.toml | sed -E 's/version = "(.*)"/\1/')"
 
       - name: Download Linux binary
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: linux-latest-binary
           path: target/release/linux
 
       - name: Download macOS binary
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         continue-on-error: true
         with:
           name: macos-latest-binary
           path: target/release/macos
 
       - name: Download Windows binary
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: windows-latest-binary
           path: target/release/windows
 
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: v${{ steps.cargo_version.outputs.version }}
-          release_name: Release v${{ steps.cargo_version.outputs.version }}
+          name: Release v${{ steps.cargo_version.outputs.version }}
           draft: false
           prerelease: false
 
