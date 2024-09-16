@@ -164,6 +164,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Extract version
+        id: cargo_version
+        run: echo "::set-output name=version::$(grep '^version =' Cargo.toml | sed -E 's/version = "(.*)"/\1/')"
+
       - name: Download Linux binary
         uses: actions/download-artifact@v3
         with:
