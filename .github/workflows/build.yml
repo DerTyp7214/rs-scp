@@ -10,6 +10,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -75,8 +78,8 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           vcpkg install libssh
-          echo '::add-path::C:\vcpkg\installed\x64-windows\lib' >> $GITHUB_ENV
-          echo '::add-path::C:\vcpkg\installed\x64-windows\bin' >> $GITHUB_ENV
+          echo "PATH=C:\vcpkg\installed\x64-windows\lib;$Env.PATH" | Out-File -FilePath $Env.GITHUB_ENV -Append
+          echo "PATH=C:\vcpkg\installed\x64-windows\bin;$Env.PATH" | Out-File -FilePath $Env.GITHUB_ENV -Append
 
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
@@ -86,14 +89,7 @@ jobs:
           override: true
 
       - name: Print env
-        if: matrix.os == 'windows-latest'
-        run: |
-          echo "PATH: %PATH%"
-          echo "LIB: %LIB%"
-          echo "LIBRARY_PATH: %LIBRARY_PATH%"
-          echo "PATH: $env:PATH"
-          echo "LIB: $env:LIB"
-          echo "LIBRARY_PATH: $env:LIBRARY_PATH"
+        run: echo ${{ env.PATH }}
 
       - name: Build
         run: cargo build --release
