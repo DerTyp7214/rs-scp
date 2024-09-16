@@ -24,8 +24,6 @@ jobs:
           windows-latest
         ]
 
-    continue-on-error: ${{ matrix.os == 'windows-latest' }}
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -47,14 +45,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-registry-
 
-      - name: Cache cargo index
-        uses: actions/cache@v3
-        with:
-          path: ~/.cargo/git
-          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-index-
-
       - name: Cache build
         uses: actions/cache@v3
         with:
@@ -65,7 +55,12 @@ jobs:
 
       - name: Install SSH on Linux
         if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get update && sudo apt-get install -y libssh-dev
+        run: |
+          sudo apt-get update && sudo apt-get install -y libssh-dev
+          mkdir libs
+          mkdir libs/linux
+          mkdir libs/linux/x86_64
+          cp /usr/lib/x86_64-linux-gnu/libssh.so libs/linux/x86_64/libssh.so
 
       - name: Install SSH on macOS
         if: matrix.os == 'macos-latest'
@@ -73,6 +68,10 @@ jobs:
           brew install libssh
           echo 'export LIBRARY_PATH=$(brew --prefix libssh)/lib:$LIBRARY_PATH' >> $GITHUB_ENV
           echo 'export LD_LIBRARY_PATH=$(brew --prefix libssh)/lib:$LD_LIBRARY_PATH' >> $GITHUB_ENV
+          mkdir libs
+          mkdir libs/macos
+          mkdir libs/macos/x86_64
+          cp /opt/homebrew/Cellar/libssh/*/lib/libssh* libs/macos/x86_64/
 
       - name: Install SSH on Windows
         if: matrix.os == 'windows-latest'
@@ -81,6 +80,11 @@ jobs:
           echo "LD_LIBRARY_PATH=C:\vcpkg\installed\x64-windows\lib;C:\vcpkg\installed\x64-windows\bin;$env:LD_LIBRARY_PATH" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "PATH=C:\vcpkg\installed\x64-windows\lib;C:\vcpkg\installed\x64-windows\bin;$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Append
           vcpkg install libssh
+          mkdir libs
+          mkdir libs\windows
+          mkdir libs\windows\x86_64
+          Copy-Item "C:\vcpkg\installed\x64-windows\lib\ssh.lib" "libs\windows\x86_64\ssh.lib"
+          echo "RUSTFLAGS=-L libs/windows/x86_64" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
@@ -89,54 +93,14 @@ jobs:
           profile: minimal
           override: true
 
-      - name: Build Windows
-        if: matrix.os == 'windows-latest'
-        run: |
-          mkdir libs
-          mkdir libs\windows
-          mkdir libs\windows\x86_64
-          Copy-Item "C:\vcpkg\installed\x64-windows\lib\ssh.lib" "libs\windows\x86_64\ssh.lib"
-          $env:RUSTFLAGS="-L libs/windows/x86_64" 
-          cargo build --release
+      - name: Build
+        run: cargo build --release
 
-      - name: Build macOS
-        if: matrix.os == 'macos-latest'
-        run: |
-          mkdir libs
-          mkdir libs/macos
-          mkdir libs/macos/x86_64
-          cp /opt/homebrew/Cellar/libssh/*/lib/libssh* libs/macos/x86_64/
-          cargo build --release
-
-      - name: Build Linux
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          mkdir libs
-          mkdir libs/linux
-          mkdir libs/linux/x86_64
-          cp /usr/lib/x86_64-linux-gnu/libssh.so libs/linux/x86_64/libssh.so
-          cargo build --release
-
-      - name: Upload Linux binary
-        if: matrix.os == 'ubuntu-latest'
+      - name: Upload binary
         uses: actions/upload-artifact@v3
         with:
-          name: linux-binary
-          path: target/release/rs-scp
-
-      - name: Upload macOS binary
-        if: matrix.os == 'macos-latest'
-        uses: actions/upload-artifact@v3
-        with:
-          name: macos-binary
-          path: target/release/rs-scp
-
-      - name: Upload Windows binary
-        if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v3
-        with:
-          name: windows-binary
-          path: target/release/rs-scp.exe
+          name: ${{ matrix.os }}-binary
+          path: target/release/rs-scp[.exe]?
 
   create_tag:
     runs-on: ubuntu-latest
@@ -171,20 +135,20 @@ jobs:
       - name: Download Linux binary
         uses: actions/download-artifact@v3
         with:
-          name: linux-binary
+          name: linux-latest-binary
           path: target/release/linux
 
       - name: Download macOS binary
         uses: actions/download-artifact@v3
         continue-on-error: true
         with:
-          name: macos-binary
+          name: macos-latest-binary
           path: target/release/macos
 
       - name: Download Windows binary
         uses: actions/download-artifact@v3
         with:
-          name: windows-binary
+          name: windows-latest-binary
           path: target/release/windows
 
       - name: Create Release
