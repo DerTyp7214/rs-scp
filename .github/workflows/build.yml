@@ -23,7 +23,10 @@ jobs:
 
       - name: Install SSH on macOS
         if: matrix.os == 'macos-latest'
-        run: brew install libssh
+        run: |
+          brew install libssh
+          echo 'export LIBRARY_PATH=$(brew --prefix libssh)/lib:$LIBRARY_PATH' >> $GITHUB_ENV
+          echo 'export LD_LIBRARY_PATH=$(brew --prefix libssh)/lib:$LD_LIBRARY_PATH' >> $GITHUB_ENV
 
       - name: Install SSH on Windows
         if: matrix.os == 'windows-latest'
