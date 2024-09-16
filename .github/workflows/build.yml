@@ -21,6 +21,39 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Cache vcpkg on Windows
+        if: matrix.os == 'windows-latest'
+        uses: actions/cache@v3
+        with:
+          path: C:\vcpkg
+          key: ${{ runner.os }}-vcpkg-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-
+
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: Cache cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-index-
+
+      - name: Cache build
+        uses: actions/cache@v3
+        with:
+          path: target
+          key: ${{ runner.os }}-build-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-build-
+
       - name: Install SSH on Linux
         if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get update && sudo apt-get install -y libssh-dev
@@ -34,7 +67,10 @@ jobs:
 
       - name: Install SSH on Windows
         if: matrix.os == 'windows-latest'
-        run: vcpkg install libssh
+        run: |
+          vcpkg install libssh
+          echo '::add-path::C:\vcpkg\installed\x64-windows\lib' >> $GITHUB_ENV
+          echo '::add-path::C:\vcpkg\installed\x64-windows\bin' >> $GITHUB_ENV
 
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
