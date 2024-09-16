@@ -9,7 +9,6 @@ use ssh::{Session, RECURSIVE, WRITE};
 #[derive(Deserialize)]
 struct Config {
     host: String,
-    user: String,
     path: String,
 }
 
