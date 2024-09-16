@@ -2,7 +2,9 @@ use std::env;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
+use copypasta::{ClipboardContext, ClipboardProvider};
 use indicatif::ProgressBar;
+use is_terminal::IsTerminal;
 use serde::Deserialize;
 use ssh::{Session, RECURSIVE, WRITE};
 
@@ -18,7 +20,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if !Path::new(&config_path).exists() {
         std::fs::create_dir_all(Path::new(&config_path).parent().unwrap())?;
         let mut file = File::create(&config_path)?;
-        file.write_all(b"host: \"\"\nuser: \"\"\npath: \"\"")?;
+        file.write_all(b"host: \"\"# Server you want to upload to.\npath: \"\"# The path on the server where your files should be saved.")?;
         println!("Config file created at: {}", config_path);
         return Ok(());
     }
@@ -72,11 +74,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     scp.flush().unwrap();
     scp.close();
 
+    let mut ctx = ClipboardContext::new().unwrap();
+
     let url = match config.host.strip_suffix("/") {
         Some(host) => format!("https://{}/{}", host, file_name),
         None => format!("https://{}/{}", config.host, file_name),
     };
-    println!("File uploaded successfully! URL: {}", url);
+
+
+    if std::io::stdout().is_terminal() {
+        println!("File uploaded successfully! URL: {}", url);
+        ctx.set_contents(url.to_owned()).unwrap();
+        println!("URL copied to clipboard!");
+    } else {
+        print!("{}", url);
+    }
 
     Ok(())
 }
