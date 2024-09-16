@@ -2,6 +2,7 @@ use std::env;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
+use std::process::{Command, Stdio};
 use copypasta::{ClipboardContext, ClipboardProvider};
 use indicatif::ProgressBar;
 use is_terminal::IsTerminal;
@@ -84,7 +85,32 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     if std::io::stdout().is_terminal() {
         println!("File uploaded successfully! URL: {}", url);
-        ctx.set_contents(url.to_owned()).unwrap();
+
+        let mut use_clipboard = false;
+
+        if env::var("WAYLAND_DISPLAY").is_ok() {
+            let mut child = Command::new("wl-copy")
+                .stdin(Stdio::piped())
+                .spawn()
+                .expect("Failed to copy URL to clipboard");
+
+            let stdin = child.stdin.as_mut().unwrap();
+            stdin.write_all(url.as_bytes()).unwrap();
+
+            let output = child.wait_with_output().unwrap();
+            if !output.status.success() {
+                use_clipboard = true;
+            }
+        } else if env::var("DISPLAY").is_ok() {
+            use_clipboard = true;
+        } else {
+            use_clipboard = true;
+        }
+
+        if use_clipboard {
+            ctx.set_contents(url.to_owned()).unwrap();
+        }
+
         println!("URL copied to clipboard!");
     } else {
         print!("{}", url);

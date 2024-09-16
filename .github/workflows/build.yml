@@ -81,6 +81,12 @@ jobs:
           profile: minimal
           override: true
 
+      - name: Print env
+        run: |
+            echo "LIBRARY_PATH: $LIBRARY_PATH"
+            echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+            echo "PATH: $PATH"
+
       - name: Build
         run: cargo build --release
 
