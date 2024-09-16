@@ -95,8 +95,9 @@ jobs:
           mkdir libs
           mkdir libs\windows
           mkdir libs\windows\x86_64
-          cp C:\vcpkg\installed\x64-windows\lib\ssh.lib libs\windows\x86_64\ssh.lib
-          cargo build --release --target x86_64-pc-windows-gnu
+          Copy-Item "C:\vcpkg\installed\x64-windows\lib\ssh.lib" "libs\windows\x86_64\ssh.lib"
+          $env:RUSTFLAGS="-L libs/windows/x86_64" 
+          cargo build --release
 
       - name: Build macOS
         if: matrix.os == 'macos-latest'
@@ -104,8 +105,8 @@ jobs:
           mkdir libs
           mkdir libs/macos
           mkdir libs/macos/x86_64
-            cp /usr/local/lib/libssh.dylib libs/macos/x86_64/libssh.dylib
-          cargo build --release --target x86_64-apple-darwin
+          cp /usr/local/lib/libssh.dylib libs/macos/x86_64/libssh.dylib
+          cargo build --release
 
       - name: Build Linux
         if: matrix.os == 'ubuntu-latest'
@@ -114,7 +115,7 @@ jobs:
           mkdir libs/linux
           mkdir libs/linux/x86_64
           cp /usr/lib/x86_64-linux-gnu/libssh.so libs/linux/x86_64/libssh.so
-          cargo build --release --target x86_64-unknown-linux-gnu
+          cargo build --release
 
       - name: Upload Linux binary
         if: matrix.os == 'ubuntu-latest'

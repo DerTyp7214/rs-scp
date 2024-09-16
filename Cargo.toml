@@ -10,15 +10,3 @@ serde_yaml = "0.9.33"
 indicatif = "0.17.8"
 copypasta = { version = "0.10.1", features = ["x11"] }
 is-terminal = "0.4.13"
-
-[target.x86_64-pc-windows-gnu.rustflags]
-linker = "link.exe"
-rustflags = ["-L", "libs/windows/x86_64/ssh.lib"]
-
-[target.x86_64-unknown-linux-gnu.rustflags]
-linker = "rust-lld"
-rustflags = ["-L", "libs/linux/x86_64", "-l", "ssh"]
-
-[target.x86_64-apple-darwin.rustflags]
-linker = "rust-lld"
-rustflags = ["-L", "libs/macos/x86_64", "-l", "ssh"]
