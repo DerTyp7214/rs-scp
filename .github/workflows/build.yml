@@ -105,7 +105,7 @@ jobs:
           mkdir libs
           mkdir libs/macos
           mkdir libs/macos/x86_64
-          cp /opt/homebrew/Cellar/libssh/*/lib/* libs/macos/x86_64/
+          cp /opt/homebrew/Cellar/libssh/*/lib/libssh* libs/macos/x86_64/
           cargo build --release
 
       - name: Build Linux
