@@ -89,15 +89,32 @@ jobs:
           profile: minimal
           override: true
 
-      - name: Build
+      - name: Build Windows
         if: matrix.os == 'windows-latest'
-        continue-on-error: true
         run: |
+          mkdir libs
+          mkdir libs\windows
+          mkdir libs\windows\x86_64
+          cp C:\vcpkg\installed\x64-windows\lib\ssh.lib libs\windows\x86_64\ssh.lib
           cargo build --release
 
-      - name: Build
-        if: matrix.os != 'windows-latest'
-        run: cargo build --release
+      - name: Build macOS
+        if: matrix.os == 'macos-latest'
+        run: |
+          mkdir libs
+          mkdir libs/macos
+          mkdir libs/macos/x86_64
+            cp /usr/local/lib/libssh.dylib libs/macos/x86_64/libssh.dylib
+          cargo build --release
+
+      - name: Build Linux
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          mkdir libs
+          mkdir libs/linux
+          mkdir libs/linux/x86_64
+          cp /usr/lib/x86_64-linux-gnu/libssh.so libs/linux/x86_64/libssh.so
+          cargo build --release
 
       - name: Upload Linux binary
         if: matrix.os == 'ubuntu-latest'
@@ -115,7 +132,6 @@ jobs:
 
       - name: Upload Windows binary
         if: matrix.os == 'windows-latest'
-        continue-on-error: true
         uses: actions/upload-artifact@v3
         with:
           name: windows-binary
