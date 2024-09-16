@@ -1,4 +1,5 @@
 use std::env;
+use std::env::args;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
@@ -16,6 +17,13 @@ struct Config {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    if args().len() == 2 && args().nth(1).unwrap() == "--help" {
+        println!("Usage: rs-scp <file_to_upload>");
+        println!("You can also pipe the output of rs-scp to get the URL.");
+        println!("\nVersion: {}", env!("CARGO_PKG_VERSION"));
+        return Ok(());
+    }
+
     let config_path = format!("{}/.config/{}/config.yml", env::var("HOME")?, "rs-scp");
 
     if !Path::new(&config_path).exists() {
@@ -28,7 +36,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let args: Vec<String> = env::args().collect();
     if args.len() != 2 {
-        println!("Usage: <program_name> <file_to_upload>");
+        println!("Usage: rs-scp <file_to_upload>");
         return Ok(());
     }
 
