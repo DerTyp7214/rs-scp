@@ -20,7 +20,7 @@ jobs:
       matrix:
         os: [
           ubuntu-latest,
-          #macos-latest,
+          macos-latest,
           windows-latest
         ]
 
@@ -141,7 +141,6 @@ jobs:
   create_tag:
     runs-on: ubuntu-latest
     needs: build
-    continue-on-error: true
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -151,6 +150,7 @@ jobs:
         run: echo "::set-output name=version::$(grep '^version =' Cargo.toml | sed -E 's/version = "(.*)"/\1/')"
 
       - name: Create tag
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -168,20 +168,20 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: linux-binary
-          path: target/release
+          path: target/release/linux
 
       - name: Download macOS binary
         uses: actions/download-artifact@v3
         continue-on-error: true
         with:
           name: macos-binary
-          path: target/release
+          path: target/release/macos
 
       - name: Download Windows binary
         uses: actions/download-artifact@v3
         with:
           name: windows-binary
-          path: target/release
+          path: target/release/windows
 
       - name: Create Release
         id: create_release
@@ -200,7 +200,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: target/release/rs-scp
+          asset_path: target/release/linux/rs-scp
           asset_name: rs-scp-linux
           asset_content_type: application/octet-stream
 
@@ -211,7 +211,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: target/release/rs-scp
+          asset_path: target/release/macos/rs-scp
           asset_name: rs-scp-macos
           asset_content_type: application/octet-stream
 
@@ -221,6 +221,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: target/release/rs-scp.exe
+          asset_path: target/release/windows/rs-scp.exe
           asset_name: rs-scp-windows.exe
           asset_content_type: application/octet-stream
