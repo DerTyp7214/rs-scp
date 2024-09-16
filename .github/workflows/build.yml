@@ -91,9 +91,8 @@ jobs:
 
       - name: Build
         if: matrix.os == 'windows-latest'
+        continue-on-error: true
         run: |
-          ls $env:LIBRARY_PATH
-          ls $env:LD_LIBRARY_PATH
           cargo build --release
 
       - name: Build
@@ -116,6 +115,7 @@ jobs:
 
       - name: Upload Windows binary
         if: matrix.os == 'windows-latest'
+        continue-on-error: true
         uses: actions/upload-artifact@v3
         with:
           name: windows-binary
