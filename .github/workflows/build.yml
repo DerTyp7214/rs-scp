@@ -91,6 +91,15 @@ jobs:
         run: echo "${{ env.PATH }}"
 
       - name: Build
+        if: matrix.os == 'windows-latest'
+        run: |
+          $env:LIBRARY_PATH = "C:\vcpkg\installed\x64-windows\lib"
+          $env:LD_LIBRARY_PATH = "C:\vcpkg\installed\x64-windows\bin"
+          $env:PATH = "$env:LIBRARY_PATH;$env:LD_LIBRARY_PATH;$env:PATH"
+          cargo build --release
+
+      - name: Build
+        if: matrix.os != 'windows-latest'
         run: cargo build --release
 
       - name: Upload Linux binary
