@@ -57,9 +57,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update && sudo apt-get install -y libssh-dev
-          mkdir libs
-          mkdir libs/linux
-          mkdir libs/linux/x86_64
+          mkdir -p libs/linux/x86_64
           cp /usr/lib/x86_64-linux-gnu/libssh.so libs/linux/x86_64/libssh.so
 
       - name: Install SSH on macOS
@@ -68,9 +66,7 @@ jobs:
           brew install libssh
           echo 'export LIBRARY_PATH=$(brew --prefix libssh)/lib:$LIBRARY_PATH' >> $GITHUB_ENV
           echo 'export LD_LIBRARY_PATH=$(brew --prefix libssh)/lib:$LD_LIBRARY_PATH' >> $GITHUB_ENV
-          mkdir libs
-          mkdir libs/macos
-          mkdir libs/macos/x86_64
+          mkdir -p libs/macos/x86_64
           cp /opt/homebrew/Cellar/libssh/*/lib/libssh* libs/macos/x86_64/
 
       - name: Install SSH on Windows
@@ -80,9 +76,7 @@ jobs:
           echo "LD_LIBRARY_PATH=C:\vcpkg\installed\x64-windows\lib;C:\vcpkg\installed\x64-windows\bin;$env:LD_LIBRARY_PATH" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "PATH=C:\vcpkg\installed\x64-windows\lib;C:\vcpkg\installed\x64-windows\bin;$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Append
           vcpkg install libssh
-          mkdir libs
-          mkdir libs\windows
-          mkdir libs\windows\x86_64
+          mkdir -p libs\windows\x86_64
           Copy-Item "C:\vcpkg\installed\x64-windows\lib\ssh.lib" "libs\windows\x86_64\ssh.lib"
           echo "RUSTFLAGS=-L libs/windows/x86_64" | Out-File -FilePath $env:GITHUB_ENV -Append
 
@@ -165,7 +159,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: target/release/linux/rs-scp
+          asset_path: target/release/linux/ubuntu-latest-binary
           asset_name: rs-scp-linux
           asset_content_type: application/octet-stream
 
@@ -176,7 +170,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: target/release/macos/rs-scp
+          asset_path: target/release/macos/macos-latest-binary
           asset_name: rs-scp-macos
           asset_content_type: application/octet-stream
 
@@ -186,6 +180,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: target/release/windows/rs-scp.exe
+          asset_path: target/release/windows/windows-latest-binary.exe
           asset_name: rs-scp-windows.exe
           asset_content_type: application/octet-stream
