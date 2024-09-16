@@ -96,6 +96,8 @@ jobs:
           $env:LIBRARY_PATH = "C:\vcpkg\installed\x64-windows\lib"
           $env:LD_LIBRARY_PATH = "C:\vcpkg\installed\x64-windows\bin"
           $env:PATH = "$env:LIBRARY_PATH;$env:LD_LIBRARY_PATH;$env:PATH"
+          ls $env:LIBRARY_PATH
+          ls $env:LD_LIBRARY_PATH
           cargo build --release
 
       - name: Build
