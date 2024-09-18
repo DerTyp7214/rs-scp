@@ -65,8 +65,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let pb = ProgressBar::new(file_size as u64);
     pb.set_style(indicatif::ProgressStyle::default_bar()
-        .template(" [{elapsed_precise}] [{wide_bar:40.cyan/blue}] {bytes}/{total_bytes} ({percent_precise}%) [{eta_precise}] ").unwrap()
-        .progress_chars("=>-")
+        .template(" [{elapsed_precise}] [{wide_bar:40.green/blue}] {bytes}/{total_bytes} ({percent_precise}%) [{eta_precise}] ").unwrap()
+        .progress_chars("=> ")
     );
 
     loop {
