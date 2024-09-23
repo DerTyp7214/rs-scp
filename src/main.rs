@@ -54,10 +54,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     session.userauth_publickey_auto(None).unwrap();
 
     let file_name: &str;
+    let arg1 = &args[1].to_owned();
 
     const CHUNK_SIZE: usize = 1024;
     if atty::is(atty::Stream::Stdin) {
-        let file_path = &args[1];
+        let file_path = arg1;
         let mut file = File::open(file_path)?;
         let file_size = file.metadata()?.len() as usize;
 
@@ -71,9 +72,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let pb = ProgressBar::new(file_size as u64);
         pb.set_style(indicatif::ProgressStyle::default_bar()
-            .template(" [{elapsed_precise}] [{wide_bar:40.green/blue}] {bytes}/{total_bytes} ({percent_precise}%) [{eta_precise}] ").unwrap()
-            .progress_chars("=> ")
+            .template(" {wide_msg} {bytes}/{total_bytes}\t{binary_bytes_per_sec} {elapsed_precise} [{bar:28}] {percent_precise}% ").unwrap()
+            .progress_chars("#- ")
         );
+        pb.set_message(file_name.to_string());
 
         loop {
             let bytes_read = file.read(&mut buffer).unwrap();
@@ -89,7 +91,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         scp.flush().unwrap();
         scp.close();
     } else {
-        file_name = &args[1];
+        file_name = arg1;
 
         let mut buffer = Vec::new();
         stdin.read_to_end(&mut buffer).unwrap();
