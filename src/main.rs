@@ -146,13 +146,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         scp.close();
     }
 
-    let mut ctx = ClipboardContext::new().unwrap();
+    let ctx = ClipboardContext::new();
 
     let url = match config.host.strip_suffix("/") {
         Some(host) => format!("https://{}/{}", host, file_name),
         None => format!("https://{}/{}", config.host, file_name),
     };
-
 
     if std::io::stdout().is_terminal() {
         println!("File uploaded successfully! URL: {}", url);
@@ -178,8 +177,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             use_clipboard = true;
         }
 
-        if use_clipboard {
-            ctx.set_contents(url.to_owned()).unwrap();
+        if use_clipboard && !ctx.is_err() {
+            ctx.unwrap().set_contents(url.to_owned()).unwrap();
         }
 
         println!("URL copied to clipboard!");
