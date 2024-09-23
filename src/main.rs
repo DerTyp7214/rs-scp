@@ -21,8 +21,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut stdin = stdin.lock();
 
     if args().len() == 2 && args().nth(1).unwrap() == "--help" {
-        println!("Usage: rs-scp <file_to_upload>");
-        println!("You can also pipe the output of rs-scp to get the URL.");
+        println!("Usage: rs-scp <file_to_upload/file_name (only if file is piped)>");
+        println!("Arguments:");
+        println!("\t--help: Display this help message.");
+        println!("\t--list: List all the files on the server.");
+        println!("\t--remove <file_name>: Remove a file from the server.");
+        println!("\nYou can also pipe the output of rs-scp to get the URL.");
         println!("\nVersion: {}", env!("CARGO_PKG_VERSION"));
         return Ok(());
     }
@@ -38,8 +42,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let args: Vec<String> = args().collect();
-    if args.len() != 2 {
-        println!("Usage: rs-scp <file_to_upload/file_name (only if file is piped)>");
+    if args.len() < 2 {
+        println!("use rs-scp --help for more information.");
         return Ok(());
     }
 
@@ -55,6 +59,41 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let file_name: &str;
     let arg1 = &args[1].to_owned();
+
+    if arg1 == "--list" {
+        let path = config.path.as_str();
+
+        let mut channel = session.channel_new().unwrap();
+        channel.open_session().unwrap();
+        channel.request_exec(format!("ls -la {}", path).as_bytes()).unwrap();
+        let mut buffer = [0; 1024];
+        let mut data = String::new();
+        while channel.stdout().read(&mut buffer).unwrap() > 0 {
+            data.push_str(std::str::from_utf8(&buffer).unwrap());
+        }
+        channel.close();
+        println!("{}", data);
+        return Ok(());
+    } else if arg1.starts_with("--remove") {
+        let path = config.path.strip_suffix("/").unwrap();
+
+        let file_name = args[2].to_owned();
+        let mut channel = session.channel_new().unwrap();
+        channel.open_session().unwrap();
+        channel.request_exec(format!("rm  {}/{}", path, file_name).as_bytes()).unwrap();
+        let mut buffer = [0; 4096];
+        let mut data = String::new();
+        while channel.stderr().read(&mut buffer).unwrap() > 0 {
+            data.push_str(std::str::from_utf8(&buffer).unwrap());
+        }
+        channel.close();
+        if data.is_empty() {
+            println!("File removed successfully!");
+        } else {
+            println!("{}", data);
+        }
+        return Ok(());
+    }
 
     const CHUNK_SIZE: usize = 1024;
     if atty::is(atty::Stream::Stdin) {
