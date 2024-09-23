@@ -1,14 +1,14 @@
+use copypasta::{ClipboardContext, ClipboardProvider};
+use indicatif::ProgressBar;
+use is_terminal::IsTerminal;
+use serde::Deserialize;
+use ssh::{Session, RECURSIVE, WRITE};
 use std::env;
 use std::env::args;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
 use std::process::{Command, Stdio};
-use copypasta::{ClipboardContext, ClipboardProvider};
-use indicatif::ProgressBar;
-use is_terminal::IsTerminal;
-use serde::Deserialize;
-use ssh::{Session, RECURSIVE, WRITE};
 
 #[derive(Deserialize)]
 struct Config {
@@ -17,6 +17,9 @@ struct Config {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let stdin = std::io::stdin();
+    let mut stdin = stdin.lock();
+
     if args().len() == 2 && args().nth(1).unwrap() == "--help" {
         println!("Usage: rs-scp <file_to_upload>");
         println!("You can also pipe the output of rs-scp to get the URL.");
@@ -34,9 +37,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         return Ok(());
     }
 
-    let args: Vec<String> = env::args().collect();
+    let args: Vec<String> = args().collect();
     if args.len() != 2 {
-        println!("Usage: rs-scp <file_to_upload>");
+        println!("Usage: rs-scp <file_to_upload/file_name (only if file is piped)>");
         return Ok(());
     }
 
@@ -50,38 +53,57 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     session.connect().unwrap();
     session.userauth_publickey_auto(None).unwrap();
 
-    let file_path = &args[1];
-    let mut file = File::open(file_path)?;
-    let file_size = file.metadata()?.len() as usize;
-
-    let file_name = Path::new(file_path).file_name().unwrap().to_str().unwrap();
-
-    let mut scp = session.scp_new(RECURSIVE | WRITE, config.path.as_str()).unwrap();
-    scp.init().unwrap();
-    scp.push_file(Path::new(file_name), file_size, 0o644).unwrap();
+    let file_name: &str;
 
     const CHUNK_SIZE: usize = 1024;
-    let mut buffer = vec![0; CHUNK_SIZE];
+    if atty::is(atty::Stream::Stdin) {
+        let file_path = &args[1];
+        let mut file = File::open(file_path)?;
+        let file_size = file.metadata()?.len() as usize;
 
-    let pb = ProgressBar::new(file_size as u64);
-    pb.set_style(indicatif::ProgressStyle::default_bar()
-        .template(" [{elapsed_precise}] [{wide_bar:40.green/blue}] {bytes}/{total_bytes} ({percent_precise}%) [{eta_precise}] ").unwrap()
-        .progress_chars("=> ")
-    );
+        file_name = Path::new(file_path).file_name().unwrap().to_str().unwrap();
 
-    loop {
-        let bytes_read = file.read(&mut buffer).unwrap();
-        if bytes_read == 0 {
-            break;
+        let mut scp = session.scp_new(RECURSIVE | WRITE, config.path.as_str()).unwrap();
+        scp.init().unwrap();
+        scp.push_file(Path::new(file_name), file_size, 0o644).unwrap();
+
+        let mut buffer = vec![0; CHUNK_SIZE];
+
+        let pb = ProgressBar::new(file_size as u64);
+        pb.set_style(indicatif::ProgressStyle::default_bar()
+            .template(" [{elapsed_precise}] [{wide_bar:40.green/blue}] {bytes}/{total_bytes} ({percent_precise}%) [{eta_precise}] ").unwrap()
+            .progress_chars("=> ")
+        );
+
+        loop {
+            let bytes_read = file.read(&mut buffer).unwrap();
+            if bytes_read == 0 {
+                break;
+            }
+
+            scp.write(&buffer[..bytes_read]).unwrap();
+            pb.inc(bytes_read as u64);
         }
 
-        scp.write(&buffer[..bytes_read]).unwrap();
-        pb.inc(bytes_read as u64);
-    }
+        pb.finish_and_clear();
+        scp.flush().unwrap();
+        scp.close();
+    } else {
+        file_name = &args[1];
 
-    pb.finish_and_clear();
-    scp.flush().unwrap();
-    scp.close();
+        let mut buffer = Vec::new();
+        stdin.read_to_end(&mut buffer).unwrap();
+        let file_size = buffer.len();
+
+        let mut scp = session.scp_new(RECURSIVE | WRITE, config.path.as_str()).unwrap();
+        scp.init().unwrap();
+        scp.push_file(Path::new(file_name), file_size, 0o644).unwrap();
+
+        scp.write(&buffer).unwrap();
+
+        scp.flush().unwrap();
+        scp.close();
+    }
 
     let mut ctx = ClipboardContext::new().unwrap();
 
