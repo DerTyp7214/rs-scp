@@ -120,7 +120,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             let pb = ProgressBar::new(file_size as u64);
             pb.set_style(indicatif::ProgressStyle::default_bar()
-                .template(&format!("Uploading: {{msg}} ({{total_bytes}})\n{}", format!("{{bytes}} {}", progress_line))).unwrap()
+                .template(&format!("Uploading: {{msg}} ({{total_bytes}})\n{}", format!("{{wide_msg}} {{bytes}} {}", progress_line))).unwrap()
                 .progress_chars("#- ")
             );
             pb.set_message(file_name.to_string());
