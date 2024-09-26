@@ -141,7 +141,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let human_file_size = Byte::from_u64(file_size as u64).get_appropriate_unit(Binary);
             let prefix = if args.len() > 2 { format!("[{index}] ") } else { "".to_string() };
             pb.set_style(indicatif::ProgressStyle::default_bar()
-                .template(&format!("{prefix}{{wide_msg}} {human_file_size:.2} {{elapsed_precise}} [{{bar:40}}] {{percent_precise}}%")).unwrap()
+                .template(&format!("{prefix}{{wide_msg}} {human_file_size:.2} {{elapsed_precise}} [{{bar:10}}] {{percent_precise}}%")).unwrap()
                 .progress_chars("#- ")
             );
             pb.set_position(file_size as u64);
