@@ -9,6 +9,8 @@ use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
 use std::process::{Command, Stdio};
+use byte_unit::Byte;
+use byte_unit::UnitType::Binary;
 
 #[derive(Deserialize)]
 struct Config {
@@ -118,12 +120,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             let progress_line = "{binary_bytes_per_sec} {elapsed_precise} [{bar:40}] {percent_precise}%";
 
-            let pb = ProgressBar::new(file_size as u64);
+            let pb = multi.add(ProgressBar::new(file_size as u64));
             pb.set_style(indicatif::ProgressStyle::default_bar()
-                .template(&format!("Uploading: {{msg}} ({{total_bytes}})\n{}", format!("{{wide_msg}} {{bytes}} {}", progress_line))).unwrap()
+                .template(&format!("{{wide_msg}} {{bytes}} {progress_line}")).unwrap()
                 .progress_chars("#- ")
             );
             pb.set_message(file_name.to_string());
+            let index = args.iter().position(|x| x == arg1).unwrap();
+            let human_file_size = Byte::from_u64(file_size as u64).get_appropriate_unit(Binary);
+            let prefix = if args.len() > 2 { format!("[{index}] ") } else { "".to_string() };
+            multi.println(format!("{prefix}Uploading: {file_name} ({human_file_size:.2})")).unwrap();
 
             loop {
                 let bytes_read = file.read(&mut buffer).unwrap();
@@ -136,12 +142,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
 
             pb.set_style(indicatif::ProgressStyle::default_bar()
-                .template(&format!("{{wide_msg}} {}", progress_line)).unwrap()
+                .template(&format!("{{wide_msg}} {progress_line}")).unwrap()
                 .progress_chars("#- ")
             );
             pb.set_position(file_size as u64);
             pb.finish();
-            multi.add(pb);
             scp.flush().unwrap();
             scp.close();
         } else {

@@ -1,6 +1,6 @@
 [package]
 name = "rs-scp"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 
 [dependencies]
@@ -11,3 +11,4 @@ indicatif = "0.17.8"
 copypasta = { version = "0.10.1", features = ["x11"] }
 is-terminal = "0.4.13"
 atty = "0.2.14"
+byte-unit = "5.1.4"
