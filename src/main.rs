@@ -136,20 +136,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 scp.write(&buffer[..bytes_read]).unwrap();
                 pb.inc(bytes_read as u64);
             }
-
+            
+            let index = args.iter().position(|x| x == arg1).unwrap();
+            let human_file_size = Byte::from_u64(file_size as u64).get_appropriate_unit(Binary);
+            let prefix = if args.len() > 2 { format!("[{index}] ") } else { "".to_string() };
             pb.set_style(indicatif::ProgressStyle::default_bar()
-                .template(&format!("{{wide_msg}} {progress_line}")).unwrap()
+                .template(&format!("{prefix}{{wide_msg}} {human_file_size} {{elapsed_precise}} [{{bar:40}}] {{percent_precise}}%")).unwrap()
                 .progress_chars("#- ")
             );
             pb.set_position(file_size as u64);
             pb.finish();
             multi.add(pb);
-
-            let index = args.iter().position(|x| x == arg1).unwrap();
-            let human_file_size = Byte::from_u64(file_size as u64).get_appropriate_unit(Binary);
-            let prefix = if args.len() > 2 { format!("[{index}] ") } else { "".to_string() };
-            multi.println(format!("{prefix}Uploaded: {file_name} ({human_file_size:.2})")).unwrap();
-
             scp.flush().unwrap();
             scp.close();
         } else {
