@@ -31,7 +31,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("\t--list: List all the files on the server.");
         println!("\t--remove <file_name>: Remove a file from the server.");
         println!("\t--json: Display output as JSON. Currently only works with --list.");
-        println!("\t--fish: Returns the fish completion code. You can save it to ~/.config/fish/completions/rs-scp.fish");
+        println!("\t--fish: Returns the fish completion code. You can add this \"rs-scp --fish | source\" to your ~/.config/fish/config.fish");
         println!("\nYou can also pipe the output of rs-scp to get the URL.");
         println!("\nVersion: {}", env!("CARGO_PKG_VERSION"));
         return Ok(());
