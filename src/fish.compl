@@ -1,5 +1,5 @@
 function __rs_scp_command_completions
-    rs-scp --help | sed '1d;/^$/d;/You can also pipe/d;/^Version/d;/^Arguments:/d' | awk -F ': ' '{print $1 "\t" $2}' | while read line
+    rs-scp --help | sed -n '/^\t--/p' | awk -F ': ' '{print $1 "\t" $2}' | while read line
         echo (string trim (string replace -r ' <[^>]*>' '' "$line"))
     end
 end
