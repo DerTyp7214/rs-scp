@@ -111,10 +111,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         } else if arg1.starts_with("--remove") {
             let path = config.path.strip_suffix("/").unwrap();
 
-            let file_name = args[2].to_owned();
+            let file_name = args[2..].to_owned();
             let mut channel = session.channel_new().unwrap();
             channel.open_session().unwrap();
-            channel.request_exec(format!("rm  {}/{}", path, file_name.replace(" ", "\\ ")).as_bytes()).unwrap();
+            channel.request_exec(format!("rm  {}/{}", path, file_name.iter().map(|x| x.replace(" ", "\\ ")).collect::<Vec<String>>().join(" ")).as_bytes()).unwrap();
             let mut buffer = [0; 4096];
             let mut data = String::new();
             while channel.stderr().read(&mut buffer).unwrap() > 0 {
