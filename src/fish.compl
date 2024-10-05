@@ -1,3 +1,11 @@
+function __rs_scp_command_completions
+    rs-scp --help | sed '1d;/^$/d;/You can also pipe/d;/^Version/d;/^Arguments:/d' | awk -F ': ' '{print $1 "\t" $2}' | while read line
+        echo (string trim (string replace -r ' <[^>]*>' '' "$line"))
+    end
+end
+
+complete -c rs-scp -f -a '(__rs_scp_command_completions)'
+
 function __rs_scp_remove_completions
     set -l json (rs-scp --list --json)
     echo $json | jq -r '.[]'
