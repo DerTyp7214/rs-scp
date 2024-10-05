@@ -114,7 +114,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let file_name = args[2].to_owned();
             let mut channel = session.channel_new().unwrap();
             channel.open_session().unwrap();
-            channel.request_exec(format!("rm  {}/{}", path, file_name).as_bytes()).unwrap();
+            channel.request_exec(format!("rm  \"{}/{}\"", path, file_name).as_bytes()).unwrap();
             let mut buffer = [0; 4096];
             let mut data = String::new();
             while channel.stderr().read(&mut buffer).unwrap() > 0 {
