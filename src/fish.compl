@@ -1,0 +1,6 @@
+function __rs_scp_remove_completions
+    set -l json (rs-scp --list --json)
+    echo $json | jq -r '.[]'
+end
+
+complete -c rs-scp -f -n '__fish_seen_subcommand_from --remove' -a '(__rs_scp_remove_completions)'

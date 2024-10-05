@@ -12,6 +12,8 @@ use std::process::{Command, Stdio};
 use byte_unit::Byte;
 use byte_unit::UnitType::Binary;
 
+const FISH_COMPLETION_SCRIPT: &str = include_str!("fish.compl");
+
 #[derive(Deserialize)]
 struct Config {
     host: String,
@@ -29,6 +31,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("\t--list: List all the files on the server.");
         println!("\t--remove <file_name>: Remove a file from the server.");
         println!("\t--json: Display output as JSON. Currently only works with --list.");
+        println!("\t--fish: Returns the fish completion code. You can save it to ~/.config/fish/completions/rs-scp.fish");
         println!("\nYou can also pipe the output of rs-scp to get the URL.");
         println!("\nVersion: {}", env!("CARGO_PKG_VERSION"));
         return Ok(());
@@ -77,7 +80,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let file_name: &str;
         let arg1 = &arg.to_owned();
 
-        if arg1 == "--list" {
+        if arg1 == "--fish" {
+            println!("{}", FISH_COMPLETION_SCRIPT);
+            return Ok(())
+        } else if arg1 == "--list" {
             let path = config.path.as_str();
 
             let mut channel = session.channel_new().unwrap();

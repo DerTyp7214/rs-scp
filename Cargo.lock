@@ -703,7 +703,7 @@ dependencies = [
 
 [[package]]
 name = "rs-scp"
-version = "0.2.5"
+version = "0.2.6"
 dependencies = [
  "atty",
  "byte-unit",
