@@ -28,6 +28,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("\t--help: Display this help message.");
         println!("\t--list: List all the files on the server.");
         println!("\t--remove <file_name>: Remove a file from the server.");
+        println!("\t--json: Display output as JSON. Currently only works with --list.");
         println!("\nYou can also pipe the output of rs-scp to get the URL.");
         println!("\nVersion: {}", env!("CARGO_PKG_VERSION"));
         return Ok(());
@@ -49,6 +50,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         return Ok(());
     }
 
+    let mut json: bool = false;
+    for arg in &args[1..] {
+        if arg == "--json" {
+            json = true;
+        }
+    }
+
     let config_file = File::open(config_path)?;
     let config: Config = serde_yaml::from_reader(config_file)?;
 
@@ -62,7 +70,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let multi = MultiProgress::new();
 
     for arg in &args {
-        if arg == &args[0] {
+        if arg == &args[0] || arg == "--json" {
             continue;
         }
 
@@ -81,7 +89,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 data.push_str(std::str::from_utf8(&buffer).unwrap());
             }
             channel.close();
-            println!("{}", data);
+            if json {
+                let mut filenames = Vec::new();
+                for line in data.lines().skip(3) {
+                    let parts: Vec<&str> = line.split_whitespace().collect();
+                    if parts.len() > 8 {
+                        filenames.push(parts[8].to_string());
+                    }
+                }
+                println!("{:?}", filenames);
+            } else {
+                println!("{}", data);
+            }
             return Ok(());
         } else if arg1.starts_with("--remove") {
             let path = config.path.strip_suffix("/").unwrap();
