@@ -82,7 +82,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         if arg1 == "--fish" {
             println!("{}", FISH_COMPLETION_SCRIPT);
-            return Ok(())
+            return Ok(());
         } else if arg1 == "--list" {
             let path = config.path.as_str();
 
@@ -100,7 +100,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 for line in data.lines().skip(3) {
                     let parts: Vec<&str> = line.split_whitespace().collect();
                     if parts.len() > 8 {
-                        filenames.push(parts[8].to_string());
+                        filenames.push(parts[8..].join(" ").to_string());
                     }
                 }
                 println!("{:?}", filenames);
