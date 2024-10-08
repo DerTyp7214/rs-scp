@@ -703,7 +703,7 @@ dependencies = [
 
 [[package]]
 name = "rs-scp"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "atty",
  "byte-unit",
@@ -711,6 +711,7 @@ dependencies = [
  "indicatif",
  "is-terminal",
  "serde",
+ "serde_json",
  "serde_yaml",
  "ssh",
 ]

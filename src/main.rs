@@ -1,7 +1,7 @@
 use copypasta::{ClipboardContext, ClipboardProvider};
 use indicatif::{MultiProgress, ProgressBar};
 use is_terminal::IsTerminal;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use ssh::{Session, RECURSIVE, WRITE};
 use std::env;
 use std::env::args;
@@ -18,6 +18,12 @@ const FISH_COMPLETION_SCRIPT: &str = include_str!("fish.compl");
 struct Config {
     host: String,
     path: String,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+struct RemoteFile {
+    name: String,
+    size: String,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -88,7 +94,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             let mut channel = session.channel_new().unwrap();
             channel.open_session().unwrap();
-            channel.request_exec(format!("ls -la {}", path).as_bytes()).unwrap();
+            channel.request_exec(format!("ls -lAh {}", path).as_bytes()).unwrap();
             let mut buffer = [0; 1024];
             let mut data = String::new();
             while channel.stdout().read(&mut buffer).unwrap() > 0 {
@@ -96,14 +102,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             channel.close();
             if json {
-                let mut filenames = Vec::new();
-                for line in data.lines().skip(3) {
+                let mut filenames = Vec::<RemoteFile>::new();
+                for line in data.lines().skip(1) {
                     let parts: Vec<&str> = line.split_whitespace().collect();
                     if parts.len() > 8 {
-                        filenames.push(parts[8..].join(" ").to_string());
+                        let file_name = parts[8..].join(" ");
+                        let file_size = parts[4].to_owned();
+                        filenames.push(RemoteFile { name: file_name, size: file_size });
                     }
                 }
-                println!("{:?}", filenames);
+                println!("{}", serde_json::to_string(&filenames).unwrap());
             } else {
                 println!("{}", data);
             }
