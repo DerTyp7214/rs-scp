@@ -4,7 +4,7 @@ function __rs_scp_command_completions
     end
 end
 
-complete -c rs-scp -a '(__rs_scp_command_completions)' -x -n 'not __fish_seen_subcommand_from --remove'
+complete -c rs-scp -F -a '(__rs_scp_command_completions)' -x -n 'not __fish_seen_subcommand_from --remove'
 
 function __rs_scp_remove_completions
     set -l json (rs-scp --list --json)
