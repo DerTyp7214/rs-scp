@@ -64,6 +64,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         if arg == "--json" {
             json = true;
         }
+        if arg == "--fish" {
+            println!("{}", FISH_COMPLETION_SCRIPT);
+            return Ok(());
+        }
     }
 
     let config_file = File::open(config_path)?;
@@ -86,10 +90,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let file_name: &str;
         let arg1 = &arg.to_owned();
 
-        if arg1 == "--fish" {
-            println!("{}", FISH_COMPLETION_SCRIPT);
-            return Ok(());
-        } else if arg1 == "--list" {
+        if arg1 == "--list" {
             let path = config.path.as_str();
 
             let mut channel = session.channel_new().unwrap();
