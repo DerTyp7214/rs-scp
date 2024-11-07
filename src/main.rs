@@ -131,7 +131,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             channel.close();
             if data.is_empty() {
-                println!("File removed successfully!");
+                println!("File{} removed successfully!", if file_name.len() == 1 { "" } else { "s" });
             } else {
                 println!("{}", data);
             }
